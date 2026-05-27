@@ -31,6 +31,33 @@ This script searches a Gmail account for emails containing the word `"unsubscrib
 
 A bookmark system allows the script to run in batches without re-processing the same emails across multiple executions.
 
+```mermaid
+flowchart TD
+    A([Start]) --> B[Load GMAIL_OFFSET\nfrom Script Properties]
+    B --> C[Read existing rows →\nbuild seenInstitutions Set]
+    C --> D{Sheet empty?}
+    D -- Yes --> E[Write column headers]
+    D -- No --> F[Search Gmail\nstartOffset + BATCH_SIZE threads]
+    E --> F
+    F --> G{Threads\nreturned?}
+    G -- No --> H[Reset offset to 0\nAlert: inbox fully scanned]
+    H --> Z([End])
+    G -- Yes --> I{More threads\nto process?}
+    I -- No --> P[Save new offset\nstartOffset + threads.length]
+    I -- Yes --> J[Get last message\nfrom thread]
+    J --> K{Sender matches\ninstitution keyword?}
+    K -- No --> I
+    K -- Yes --> L{Email in\nseenInstitutions?}
+    L -- Yes --> I
+    L -- No --> M[Regex-extract\nunsubscribe hrefs]
+    M --> N{Links\nfound?}
+    N -- No --> I
+    N -- Yes --> O[Append row to sheet\nAdd email to seenInstitutions]
+    O --> I
+    P --> Q[Log & alert summary]
+    Q --> Z([End])
+```
+
 ---
 
 ## Features
